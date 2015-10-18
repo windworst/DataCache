@@ -30,6 +30,7 @@ public class DataCacheManager {
             }
         }));
     }
+
     public static DataCache<String, Bitmap> getDoubleBitmapCache(LruCache<String,Bitmap> lruCache, DiskLruCache diskLruCache) {
         DataCache<String, Bitmap> lruDataCache = getLruBitmapCache(lruCache);
         DataCache<String, Bitmap> diskLruDataCache = getDiskLruBitmapCache(diskLruCache);
@@ -51,5 +52,56 @@ public class DataCacheManager {
             return null;
         }
         return getDoubleBitmapCache(lruCache, diskLruCache);
+    }
+
+    private static DataCache<String, byte[]> getLruCache(LruCache<String,byte[]> lruCache) {
+        return new DataCache<String,byte[]>(new LruCacheAdapter<String,byte[]>(lruCache));
+    }
+    private static DataCache<String, byte[]> getDiskLruCache(DiskLruCache diskLruCache) {
+        return new DataCache<String,byte[]>(new DiskIruCacheAdapter<String,byte[]>(diskLruCache, new DiskIruCacheAdapter.ValueDataSaver<byte[]>() {
+            @Override
+            public void writeTo(OutputStream outputStream, byte[] data) {
+                try {
+                    outputStream.write(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public byte[] readFrom(InputStream inputStream) {
+                try {
+                    byte[] data = new byte[inputStream.available()];
+                    inputStream.read(data);
+                    return data;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }));
+    }
+
+    public static DataCache<String, byte[]> getDoubleCache(LruCache<String,byte[]> lruCache, DiskLruCache diskLruCache) {
+        DataCache<String, byte[]> lruDataCache = getLruCache(lruCache);
+        DataCache<String, byte[]> diskLruDataCache = getDiskLruCache(diskLruCache);
+        return lruDataCache.setNextCache(diskLruDataCache);
+    }
+
+    public static DataCache<String, byte[]> getDoubleCache(File directory, long memoryCacheSize, long diskCacheSize) {
+        LruCache<String,byte[]> lruCache = new LruCache<String,byte[]>((int) memoryCacheSize) {
+            @Override
+            protected int sizeOf(String key, byte[] value) {
+                return value.length;
+            }
+        };
+        DiskLruCache diskLruCache = null;
+        try {
+            diskLruCache = DiskLruCache.open(directory, 1, 1, diskCacheSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return getDoubleCache(lruCache, diskLruCache);
     }
 }
