@@ -14,11 +14,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class DataCacheManager {
-    private static DataCache<String, Bitmap> getLruBitmapCache(LruCache<String,Bitmap> lruCache) {
-        return new DataCache<String,Bitmap>(new LruCacheAdapter<String,Bitmap>(lruCache));
+    private static LruCacheAdapter<String, Bitmap> getLruBitmapCacheAdapter(LruCache<String,Bitmap> lruCache) {
+        return new LruCacheAdapter<String,Bitmap>(lruCache);
     }
-    private static DataCache<String, Bitmap> getDiskLruBitmapCache(DiskLruCache diskLruCache) {
-        return new DataCache<String,Bitmap>(new DiskIruCacheAdapter<String,Bitmap>(diskLruCache, new DiskIruCacheAdapter.ValueDataSaver<Bitmap>() {
+    private static DiskIruCacheAdapter<String, Bitmap> getDiskLruBitmapCacheAdapter(DiskLruCache diskLruCache) {
+        return new DiskIruCacheAdapter<String,Bitmap>(diskLruCache, new DiskIruCacheAdapter.ValueDataSaver<Bitmap>() {
             @Override
             public void writeTo(OutputStream outputStream, Bitmap data) {
                 data.compress(Bitmap.CompressFormat.PNG,100,outputStream);
@@ -28,13 +28,11 @@ public class DataCacheManager {
             public Bitmap readFrom(InputStream inputStream) {
                 return BitmapFactory.decodeStream(inputStream);
             }
-        }));
+        });
     }
 
     public static DataCache<String, Bitmap> getDoubleBitmapCache(LruCache<String,Bitmap> lruCache, DiskLruCache diskLruCache) {
-        DataCache<String, Bitmap> lruDataCache = getLruBitmapCache(lruCache);
-        DataCache<String, Bitmap> diskLruDataCache = getDiskLruBitmapCache(diskLruCache);
-        return lruDataCache.setNextCache(diskLruDataCache);
+        return new DataCache<String, Bitmap>().addCache(getLruBitmapCacheAdapter(lruCache)).addCache(getDiskLruBitmapCacheAdapter(diskLruCache));
     }
 
     public static DataCache<String, Bitmap> getDoubleBitmapCache(File directory, long memoryCacheSize, long diskCacheSize) {
@@ -54,11 +52,11 @@ public class DataCacheManager {
         return getDoubleBitmapCache(lruCache, diskLruCache);
     }
 
-    private static DataCache<String, byte[]> getLruCache(LruCache<String,byte[]> lruCache) {
-        return new DataCache<String,byte[]>(new LruCacheAdapter<String,byte[]>(lruCache));
+    private static LruCacheAdapter<String, byte[]> getLruCacheAdapter(LruCache<String,byte[]> lruCache) {
+        return new LruCacheAdapter<String,byte[]>(lruCache);
     }
-    private static DataCache<String, byte[]> getDiskLruCache(DiskLruCache diskLruCache) {
-        return new DataCache<String,byte[]>(new DiskIruCacheAdapter<String,byte[]>(diskLruCache, new DiskIruCacheAdapter.ValueDataSaver<byte[]>() {
+    private static DiskIruCacheAdapter<String, byte[]> getDiskLruCacheAdapter(DiskLruCache diskLruCache) {
+        return new DiskIruCacheAdapter<String,byte[]>(diskLruCache, new DiskIruCacheAdapter.ValueDataSaver<byte[]>() {
             @Override
             public void writeTo(OutputStream outputStream, byte[] data) {
                 try {
@@ -79,13 +77,11 @@ public class DataCacheManager {
                 }
                 return null;
             }
-        }));
+        });
     }
 
     public static DataCache<String, byte[]> getDoubleCache(LruCache<String,byte[]> lruCache, DiskLruCache diskLruCache) {
-        DataCache<String, byte[]> lruDataCache = getLruCache(lruCache);
-        DataCache<String, byte[]> diskLruDataCache = getDiskLruCache(diskLruCache);
-        return lruDataCache.setNextCache(diskLruDataCache);
+        return new DataCache<String, byte[]>().addCache(getLruCacheAdapter(lruCache)).addCache(getDiskLruCacheAdapter(diskLruCache));
     }
 
     public static DataCache<String, byte[]> getDoubleCache(File directory, long memoryCacheSize, long diskCacheSize) {

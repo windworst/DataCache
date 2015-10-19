@@ -1,31 +1,29 @@
 package datacache;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class DataCache<KEY,VALUE>{
-    private final ICacheAdapter<KEY,VALUE> mCacheAdapter;
-    private DataCache<KEY, VALUE> mNextDataCache = null;
+    private List<ICacheAdapter> mCacheAdapterList = new ArrayList<ICacheAdapter>();
 
-    public DataCache(ICacheAdapter<KEY, VALUE> cache) {
-        if( (mCacheAdapter = cache) == null) {
-            throw new RuntimeException("DataCache(): cache cannot null");
+    public DataCache<KEY,VALUE> addCache(ICacheAdapter cacheAdapter) {
+        if(cacheAdapter != null) {
+            mCacheAdapterList.add(cacheAdapter);
         }
-    }
-
-    public DataCache<KEY,VALUE> setNextCache(DataCache<KEY,VALUE> dataCache) {
-        mNextDataCache = dataCache;
         return this;
-    }
-
-    public DataCache<KEY, VALUE> getNextCache() {
-        return mNextDataCache;
     }
 
     /*
      put value to all cache
      */
-    public void put(KEY key,VALUE value) {
-        mCacheAdapter.put(key, value);
-        if(getNextCache() != null ) {
-            getNextCache().put(key, value);
+    public void put(KEY key, VALUE value) {
+        put(key,value, false);
+    }
+    public void put(KEY key,VALUE value, boolean flush) {
+        for(ICacheAdapter<KEY,VALUE> cacheAdapter:mCacheAdapterList) {
+            if(flush || (!cacheAdapter.has(key)) ) {
+                cacheAdapter.put(key,value);
+            }
         }
     }
 
@@ -33,12 +31,14 @@ public final class DataCache<KEY,VALUE>{
      get cache from this and next cache, save cache in this cache( if this cache not found)
      */
     public VALUE get(KEY key) {
-        VALUE value = mCacheAdapter.get(key);
-        if(value == null && getNextCache() != null ) {
-            value = getNextCache().get(key);
-            if(value != null) {
-                mCacheAdapter.put(key,value);
+        VALUE value = null;
+        for(ICacheAdapter<KEY,VALUE> cacheAdapter:mCacheAdapterList) {
+            if( null != (value = cacheAdapter.get(key) ) ) {
+                break;
             }
+        }
+        if(value != null) {
+            put(key,value);
         }
         return value;
     }
@@ -47,6 +47,11 @@ public final class DataCache<KEY,VALUE>{
      return true if found in this cache or next cache
      */
     public boolean has(KEY key) {
-        return mCacheAdapter.has(key) || ( getNextCache() != null && getNextCache().has(key) );
+        for(ICacheAdapter<KEY,VALUE> cacheAdapter:mCacheAdapterList) {
+            if(cacheAdapter.has(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
