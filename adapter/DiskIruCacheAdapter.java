@@ -30,8 +30,8 @@ public class DiskIruCacheAdapter<KEY,VALUE> implements ICacheAdapter<KEY,VALUE> 
             if(editor != null) {
                 OutputStream outputStream = editor.newOutputStream(0);
                 mValueDataSaver.writeTo(outputStream,data);
+                editor.commit();
             }
-            editor.commit();
         } catch (IOException e) {
             e.printStackTrace();
         }
