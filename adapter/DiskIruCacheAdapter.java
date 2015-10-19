@@ -48,7 +48,6 @@ public class DiskIruCacheAdapter<KEY,VALUE> implements ICacheAdapter<KEY,VALUE> 
                 snapshot.close();
                 return value;
             }
-            snapshot.close();
         }
         catch (IOException e) {
             e.printStackTrace();
