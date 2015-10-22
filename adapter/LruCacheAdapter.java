@@ -10,7 +10,7 @@ public class LruCacheAdapter<KEY,VALUE> implements ICacheAdapter<KEY,VALUE> {
 
     public LruCacheAdapter(LruCache<KEY,VALUE> lruCache) {
         if( ( mLruCache = lruCache) == null ) {
-            throw new RuntimeException("LruCacheAdapter(): lruCache cannot null");
+            throw new NullPointerException();
         }
     }
     @Override

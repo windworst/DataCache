@@ -19,7 +19,7 @@ public class DiskIruCacheAdapter<KEY,VALUE> implements ICacheAdapter<KEY,VALUE> 
 
     public DiskIruCacheAdapter(DiskLruCache diskIruCache, ValueDataSaver<VALUE> saver) {
         if( (mDiskIruCache = diskIruCache) == null || (mValueDataSaver = saver) == null ) {
-            throw new RuntimeException("DiskIruCacheAdapter(): diskIruCache cannot null");
+            throw new NullPointerException();
         }
     }
     @Override
