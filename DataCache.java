@@ -17,7 +17,7 @@ public final class DataCache<KEY,VALUE>{
      put value to all cache
      */
     public void put(KEY key, VALUE value) {
-        put(key,value, false);
+        put(key,value, true);
     }
     public void put(KEY key,VALUE value, boolean flush) {
         for(ICacheAdapter<KEY,VALUE> cacheAdapter:mCacheAdapterList) {
